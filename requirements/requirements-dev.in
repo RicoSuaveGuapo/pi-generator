@@ -1,0 +1,6 @@
+-c requirements.txt
+
+uv==0.1.26
+ruff==0.3.4
+pyright==1.1.355
+pre-commit==3.7.0

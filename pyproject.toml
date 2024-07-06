@@ -1,0 +1,146 @@
+[build-system]
+requires = ["hatchling>=1.13.0", "hatch-vcs>=0.3.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pi-generator"
+description = "Room of pi-generator"
+requires-python = ">=3.11"
+authors = [{ name = "Rico", email = "rch0421@gmail.com" }]
+dependencies = [
+  "torch>1.13.1",
+  "numpy~=1.21",
+  "pillow~=10.4.0",
+]
+dynamic = ["version"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/pi_generator/_version.py"
+
+[tool.hatch.build.targets.sdist]
+include = ["/src"]
+
+[tool.hatch.build.targets.wheel]
+only-include = ["src"]
+sources = ["src"]
+
+[tool.ruff]
+extend-exclude = ["output", "temp", "tmp"]
+
+
+[tool.ruff.lint.pycodestyle]
+max-line-length = 130
+max-doc-length = 130
+
+
+[tool.ruff.lint]
+select = [
+  "F", # pyflakes
+  "E", # pycodestyle error
+  "W", # pycodestyle warning
+  "I",   # isort
+  "N", # pep8-naming
+  # "D",   # pydocstyle
+  "UP",  # pyupgrade
+  "YTT", # flake8-2020
+  "ANN", # flake8-annotations
+  "S",   # flake8-bandit
+  "BLE", # flake8-blind-except
+  "FBT", # flake8-boolean-trap
+  "B",   # flake8-bugbear
+  # "A",   # flake8-builtins
+  # "COM", # flake8-commas
+  "C4",  # flake8-comprehensions
+  "DTZ", # flake8-datetimez
+  "T10", # flake8-debugger
+  # "EM",  # flake8-errmsg
+  "EXE", # flake8-executable
+  "FA",  # flake8-future-annotations
+  "ISC", # flake8-implicit-str-concat
+  "ICN", # flake8-import-conventions
+  # "G",   # flake8-logging-format
+  "INP",  # flake8-no-pep420
+  "PIE",  # flake8-pie
+  "PT",   # flake8-pytest-style
+  "Q",    #flake8-quotes
+  "RSE",  # flake8-raise
+  "RET",  # flake8-return
+  "SLF",  # flake8-self
+  "SLOT", # flake8-slots
+  "SIM",  # flake8-simplify
+  "TID",  # flake8-tidy-imports
+  # "TCH", # flake8-type-checking
+  "INT", # flake8-gettext
+  "ARG", # flake8-unused-arguments
+  "PTH", # flake8-use-pathlib
+  "ERA", # eradicate
+  # "PD",  # pandas-vet
+  "PGH", # pygrep-hooks
+  "PLC", # pylint
+  "PLE", # pylint Error
+  # "PLR", # pylint Refactor
+  "PLW", # pylint Warning
+  "TRY", # tryceratops
+  "FLY", # flynt
+  "NPY", # numpy
+  # "PERF", # Perflint
+  # "FURB", # refurb
+  # "LOG",  # flake8-logging
+  "RUF", # ruff-specific rules
+]
+ignore = [
+  "ANN101",  # allow omission of type annotation for self in method
+  "ANN102",  # allow omission of type annotation for cls in method
+  "ANN002",  # allow omission of *args
+  "ANN003",  # allow omission of *kwargs
+  "ANN401",  # allow dynamically typed expressions (typing.Any)
+  "B028",    # allow implicit stacklevel
+  "DTZ007",  # we mostly use pytz to localize datetime, which is not accepted by ruff
+  "S101",    # allow usage of assert
+  "S311",    # allow usage of random
+  "S603",    # allow subprocess call
+  "S608",    # allow possible SQL injection
+  "PGH003",  # allow type: ignore
+  "PLW0603", # allow global
+  "F403",    # allow usage of from module import *
+  "TRY002",  # allow vanilla Exception
+  "TRY003",  # allow long messages outside the exception class
+  "ISC001",  # coflict with formatter
+]
+unfixable = [
+  "F401",   # don't touch unused imports
+  "PIE794", # don't touch redefinition
+  "ERA001", # don't touch commented-out code
+  "F841",   # don't touch unused variable
+]
+
+
+[tool.ruff.lint.isort]
+relative-imports-order = "closest-to-furthest"
+
+[tool.ruff.lint.flake8-annotations]
+suppress-none-returning = true
+
+[tool.pyright]
+include = ["src"]
+pythonVersion = "3.11"
+pythonPlatform = "All"
+typeCheckingMode = "basic"
+useLibraryCodeForTypes = false
+reportIncompatibleMethodOverride = "warning"
+reportIncompatibleVariableOverride = "warning"
+reportUnnecessaryTypeIgnoreComment = "warning"
+reportUnnecessaryIsInstance = "warning"
+reportUnnecessaryComparison = "warning"
+reportUnnecessaryContains = "warning"
+reportAssertAlwaysTrue = "warning"
+venvPath = "/opt/anaconda3/envs/pi-generator"
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
