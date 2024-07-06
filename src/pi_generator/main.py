@@ -1,64 +1,44 @@
-import numpy as np
+from pathlib import Path
+
 import torch
-import torch.nn as nn
-from PIL import Image
+import torch.optim as optim
+import typer
+from torch.utils.data import DataLoader
+from tqdm import tqdm
+
+from pi_generator.dataset import PiDataset
+from pi_generator.model import TransformerVAE
+from pi_generator.utils import vae_loss
+
+THE_PI_IMG = "/Users/rico.li/Job/gen_ml_quiz_content/sparse_pi_colored.jpg"
 
 
-def input() -> np.ndarray:
-    xs = np.load("/Users/rico.li/Job/gen_ml_quiz_content/pi_xs.npy")
-    ys = np.load("/Users/rico.li/Job/gen_ml_quiz_content/pi_ys.npy")
-    image_array = np.array(
-        Image.open("/Users/rico.li/Job/gen_ml_quiz_content/sparse_pi_colored.jpg")
-    )
-    return image_array[xs, ys]
+def generate(): ...
 
 
-class TransformerEncoder(nn.Module):
-    def __init__(self, input_dim: int, embed_dim: int, nhead: int, num_layers: int):
-        super().__init__()
-        # linear trans from raw input to embedding
-        # y = Mx + b, where input_dim depends on the src, and embed_dim decides by me
-        self.embedding = nn.Linear(input_dim, embed_dim)
-        # notice that the output dim of above linear trans should be able to take
-        # as input for transformer, that us d_model = embed_dim
-        encoder_layer = nn.TransformerEncoderLayer(
-            d_model=embed_dim,
-            nhead=nhead,
-            dim_feedforward=128,  # just for small encoder
-        )
-        # repeatly construct encoder_layer num_layers times
-        self.transformer_encoder = nn.TransformerEncoder(
-            encoder_layer, num_layers=num_layers
-        )
+def train():
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = TransformerVAE(
+        input_dim=300 * 300 * 3, embed_dim=64, nhead=2, num_layers=3
+    ).to(device)
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-    def forward(self, src: torch.Tensor) -> torch.Tensor:
-        src = self.embedding(src)
-        return self.transformer_encoder(src)
+    num_epochs = 1
+    for _ in tqdm(range(num_epochs)):
+        model.train()
+        for src, tgt in DataLoader(PiDataset(THE_PI_IMG, versions=100)):
+            _src = src.view(src.size(0), -1).to(device)
+            _tgt = tgt.view(tgt.size(0), -1).to(device)
+
+            output, mu, logvar = model(_src, _tgt)
+            loss = vae_loss(output, tgt, mu, logvar)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+    Path("./ckpts").mkdir(exist_ok=True, parents=True)
+    torch.save(model.state_dict(), "./ckpts/a_model.pth")
 
 
-class TransformerDecoder(nn.Module):
-    def __init__(
-        self,
-        input_dim: int,
-        embed_dim: int,
-        nhead: int,
-        num_layers: int,
-        output_dmi: int,
-    ):
-        super().__init__()
-        self.embedding = nn.Linear(input_dim, embed_dim)
-        decoder_layer = nn.TransformerDecoderLayer(
-            d_model=embed_dim,
-            nhead=nhead,
-            dim_feedforward=128,
-        )
-        self.transformer_decoder = nn.TransformerDecoder(
-            decoder_layer, num_layers=num_layers
-        )
-        # use linear trans back to desired dim
-        self.fc_out = nn.Linear(embed_dim, output_dmi)
-
-    def forward(self, tgt: torch.Tensor, memory: torch.Tensor) -> torch.Tensor:
-        embed_tgt = self.embedding(tgt)
-        decode_output = self.transformer_decoder(embed_tgt, memory)
-        return self.fc_out(decode_output)
+if __name__ == "__main__":
+    typer.run(train)
