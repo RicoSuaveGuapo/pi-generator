@@ -16,6 +16,7 @@ class TransformerEncoder(nn.Module):
             d_model=embed_dim,
             nhead=nhead,
             dim_feedforward=128,  # just for small encoder
+            batch_first=True,
         )
         # repeatly construct encoder_layer num_layers times
         self.transformer_encoder = nn.TransformerEncoder(
@@ -50,6 +51,7 @@ class TransformerDecoder(nn.Module):
             d_model=embed_dim,
             nhead=nhead,
             dim_feedforward=128,
+            batch_first=True,
         )
         self.transformer_decoder = nn.TransformerDecoder(
             decoder_layer, num_layers=num_layers
@@ -62,6 +64,10 @@ class TransformerDecoder(nn.Module):
         embed_tgt = self.embedding(tgt)
         decode_output = self.transformer_decoder(embed_tgt, memory)
         return self.fc_out(decode_output)
+
+    def decode_from_latent(self, z: torch.Tensor, seq_length: int) -> torch.Tensor:
+        tgt = torch.zeros(1, seq_length).to(z.device)
+        return self.forward(tgt, z)
 
 
 class TransformerVAE(nn.Module):

@@ -115,6 +115,7 @@ ignore = [
   "TRY002",  # allow vanilla Exception
   "TRY003",  # allow long messages outside the exception class
   "ISC001",  # coflict with formatter
+  "B008",    # perform function call `typer.Option` in argument defaults
 ]
 unfixable = [
   "F401",   # don't touch unused imports
@@ -143,7 +144,6 @@ reportUnnecessaryIsInstance = "warning"
 reportUnnecessaryComparison = "warning"
 reportUnnecessaryContains = "warning"
 reportAssertAlwaysTrue = "warning"
-venvPath = "/opt/anaconda3/envs/pi-generator"
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]

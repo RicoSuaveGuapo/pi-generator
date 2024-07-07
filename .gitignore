@@ -1,2 +1,5 @@
 src/pi_generator/_version.py
 ckpts/*
+__pycache__/
+*.__pycache__
+*.jpg

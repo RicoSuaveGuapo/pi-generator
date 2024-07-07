@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 import torch
 from PIL import Image
@@ -15,14 +17,14 @@ def input() -> np.ndarray:
 
 
 class PiDataset(Dataset):
-    def __init__(self, img_path: str, versions: int):
+    def __init__(self, img_path: Path, iterations: int):
         self.img = Image.open(img_path)
-        self.versions = versions
+        self.iterations = iterations
         to_tenso_trans = transforms.ToTensor()
         self.img_tensor = to_tenso_trans(self.img)
 
     def __len__(self) -> int:
-        return self.versions
+        return self.iterations
 
     def __getitem__(self, index: int) -> tuple[torch.Tensor, torch.Tensor]:
         return self.img_tensor, self.img_tensor
