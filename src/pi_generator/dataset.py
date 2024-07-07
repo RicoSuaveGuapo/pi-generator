@@ -1,19 +1,9 @@
 from pathlib import Path
 
-import numpy as np
 import torch
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
-
-
-def input() -> np.ndarray:
-    xs = np.load("/Users/rico.li/Job/gen_ml_quiz_content/pi_xs.npy")
-    ys = np.load("/Users/rico.li/Job/gen_ml_quiz_content/pi_ys.npy")
-    image_array = np.array(
-        Image.open("/Users/rico.li/Job/gen_ml_quiz_content/sparse_pi_colored.jpg")
-    )
-    return image_array[xs, ys]
 
 
 class PiDataset(Dataset):

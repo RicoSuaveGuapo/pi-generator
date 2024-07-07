@@ -18,8 +18,13 @@ def reparameterize(mu: torch.Tensor, logvar: torch.Tensor) -> torch.Tensor:
 
 
 def vae_loss(
-    recon_x: torch.Tensor, x: torch.Tensor, mu: torch.Tensor, logvar: torch.Tensor
-) -> torch.Tensor:
+    recon_x: torch.Tensor,
+    x: torch.Tensor,
+    mu: torch.Tensor,
+    logvar: torch.Tensor,
+    kl_beta: float,
+) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
     recon_loss = functional.mse_loss(recon_x, x, reduction="sum")
     kl_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-    return recon_loss + kl_loss
+    kl_loss *= kl_beta
+    return recon_loss + kl_loss, {"recon": recon_loss, "kl_loss": kl_loss}

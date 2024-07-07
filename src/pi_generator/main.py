@@ -9,10 +9,15 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from pi_generator.dataset import PiDataset
+from pi_generator.eval import compute_fid_command
 from pi_generator.model import TransformerDecoder, TransformerVAE
 from pi_generator.utils import vae_loss
 
-THE_PI_IMG = Path("/mnt/e/learning/sparse_pi_colored.jpg")
+THE_PI_IMG = Path("./sparse_pi_colored.jpg")
+
+"""Example
+python -m pi_generator.main --is-train  --is-generate
+"""
 
 
 def inferce_from_decoder(
@@ -24,6 +29,7 @@ def inferce_from_decoder(
     with torch.no_grad():
         generate_image = decoder.decode_from_latent(z, seq_length)
 
+    generate_image = torch.clamp(generate_image, min=0.0)
     generate_image = (generate_image - generate_image.min()) / (
         generate_image.max() - generate_image.min()
     )
@@ -44,6 +50,7 @@ def generate_pi_img(ckpt_path: Path):
     img_path = "generate_pi.jpg"
     img.save(img_path)
     print(f"\nImage is generated at {img_path}")
+    compute_fid_command(THE_PI_IMG, Path(img_path))
 
 
 def train(img_path: Path):
@@ -54,20 +61,27 @@ def train(img_path: Path):
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
     model.train()
-    for src, tgt in tqdm(
-        DataLoader(PiDataset(img_path, iterations=1000)), desc="Training"
-    ):
+    kl_beta = 0.0
+    pbar = tqdm(DataLoader(PiDataset(img_path, iterations=3000)))
+    for idx, (src, tgt) in enumerate(pbar):
         _src = src.view(src.size(0), -1).to(device)  # (1, 300 * 300 * 3)
         _tgt = tgt.view(tgt.size(0), -1).to(device)
 
         output, mu, logvar = model(_src, _tgt)
-        loss = vae_loss(output, _tgt, mu, logvar)
+        kl_beta = min(1.0, idx / len(pbar))
+        loss, loss_items = vae_loss(output, _tgt, mu, logvar, kl_beta)
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+        if idx % 50 == 0:
+            pbar.set_description(
+                f"recon loss: {loss_items['recon']:.2f}, kl_loss: {loss_items['kl_loss']:.2g}"
+            )
 
     Path("./ckpts").mkdir(exist_ok=True, parents=True)
-    torch.save(model.state_dict(), "./ckpts/a_model.pth")
+    model_path = "./ckpts/a_model.pth"
+    torch.save(model.state_dict(), model_path)
+    print(f"model is saved in {model_path}")
 
 
 def main(
