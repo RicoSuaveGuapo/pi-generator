@@ -20,7 +20,7 @@ python -m pi_generator.main --is-train  --is-generate
 """
 
 
-def inferce_from_decoder(
+def inference_from_decoder(
     decoder: TransformerDecoder, latent_dim: int, seq_length: int
 ) -> np.ndarray:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -39,10 +39,11 @@ def inferce_from_decoder(
 def generate_pi_img(ckpt_path: Path):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = TransformerVAE(
-        input_dim=300 * 300 * 3, embed_dim=64, nhead=8, num_layers=3
+        input_dim=300 * 300 * 3, embed_dim=64, nhead=2, num_layers=3
     ).to(device)
     model.load_state_dict(torch.load(ckpt_path))
-    generate_image = inferce_from_decoder(
+    model.eval()
+    generate_image = inference_from_decoder(
         model.decoder, latent_dim=64, seq_length=300 * 300 * 3
     )
     generate_image = (generate_image * 255.0).astype(np.uint8)
