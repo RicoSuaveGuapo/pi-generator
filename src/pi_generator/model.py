@@ -79,15 +79,13 @@ class TransformerEncoder(nn.Module):
         self.mu = nn.Linear(embed_dim, embed_dim)
         self.logvar = nn.Linear(embed_dim, embed_dim)
 
-    def forward(
-        self, src: torch.Tensor
-    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    def forward(self, src: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         src = self.embedding(src)
         src = self.positional_encoding(src)
         output = self.transformer_encoder(src)
         mu = self.mu(output)
         logvar = self.logvar(output)
-        return output, mu, logvar
+        return mu, logvar
 
 
 class TransformerDecoder(nn.Module):
@@ -139,7 +137,7 @@ class TransformerVAE(nn.Module):
     def forward(
         self, src: torch.Tensor, tgt: torch.Tensor
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        memory, mu, logvar = self.encoder(src)
+        mu, logvar = self.encoder(src)
         z = reparameterize(mu, logvar)
-        output = self.decoder(tgt, memory + z)
+        output = self.decoder(tgt, z)
         return output, mu, logvar
